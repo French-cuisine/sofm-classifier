@@ -1,0 +1,105 @@
+#importing important libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+#reading dataset from kaggle
+#link :- https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data?resource=download
+
+data = pd.read_csv(r"./data.csv")
+df = pd.DataFrame(data)
+
+# create a list of features
+feature_list = [] 
+
+for i in range(2, 12):
+    feature_list.append(i)
+
+data = df[df.columns[feature_list]]
+data = data.to_numpy()
+
+data = data.T # make features row
+
+max_val = np.max(data, axis = 0)
+
+data = data/max_val #normalized data
+
+
+class weight():
+    
+    """
+    1. Procedure: Create a class for initialising the weight vector for kohonen SOFM.
+    2. Calling Method: weights = weight(data)
+                       weights.initialise() .
+    
+    """
+    def __init__(self, data_in):
+        self.data_in = data_in 
+        
+
+    def initialise(self):
+        #weight initialisation by choosing a random subspace of input space
+        
+        l = np.random.randint(low = 0, high = np.size(self.data_in, 0) - 1, size = 6)
+        
+        weight = self.data_in[:,l]
+        
+        return weight
+
+
+
+class compute():
+    
+    
+    def __init__(self, data_in):
+        self.data_in = data_in
+        
+                    
+    def train(self):
+        #set training weights 
+        Weights = weight(self.data_in)
+        Weights = Weights.initialise()
+       
+        #Do until false i.e. exhaustion of dataset.
+        
+        for p in range(np.shape(self.data_in)[1]):
+
+            x = self.data_in[:, p]
+            l = np.random.randint(low = 0, high = np.shape(Weights)[1])
+            w = Weights[:, l]
+
+            k = np.sum((x-w)**2)
+            
+
+            for j in range(np.shape(Weights)[1]):
+                
+                radius = 1
+
+                lr = 0.3*np.exp(-0.5*j)/(radius+1) 
+
+                d = np.sum((x-Weights[:, j])**2)
+
+                if d < k :
+
+                    k = d 
+                    radius = 0 
+                
+                else :
+                    radius = 1 
+
+                #weight updation
+
+                Weights[:, j] = Weights[:, j] + lr*(x- Weights[:, j])
+
+            if p % 100 == 0:
+
+                print("Trained for ", p, "training examples (Epochs): ")
+                print(Weights)
+
+        return Weights
+
+
+Output = compute(data)
+
+Output = Output.train()
+
